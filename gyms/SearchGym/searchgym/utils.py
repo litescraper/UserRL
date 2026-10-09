@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import http.client
 import json
 import time
@@ -31,7 +32,10 @@ def get_serper_api_key():
 
 api_key = get_serper_api_key()
 
-conn = http.client.HTTPSConnection("google.serper.dev")
+serper_url = urlparse(os.getenv("SERPER_BASE_URL", "https://google.serper.dev"))
+conn = (
+    http.client.HTTPConnection if serper_url.scheme == "http" else http.client.HTTPSConnection
+)(serper_url.netloc)
 headers = {
   'X-API-KEY': api_key,
   'Content-Type': 'application/json'
@@ -49,7 +53,7 @@ def search_serper(query, num=10):
 
     try_time = 0
     while True:
-        conn.request("POST", "/search", payload, headers)
+        conn.request("POST", f"{serper_url.path.rstrip('/')}/search", payload, headers)
         res = conn.getresponse()
         data = res.read()
         data = data.decode("utf-8")
